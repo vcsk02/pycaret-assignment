@@ -1,107 +1,195 @@
-PyCaret "Low Code" Data Mining Assignment
+# PyCaret “Low Code” Data Mining Assignment
 
-This repository contains a Google Colab notebook demonstrating the use of the PyCaret library for various data mining tasks, as required by the assignment.
+This repository contains a Google Colab notebook that demonstrates end-to-end data mining with the **PyCaret** library across supervised learning, clustering, anomaly detection, and time-series forecasting. All examples use the **Fitness & Activity** dataset.
 
-All tasks are performed on the Fitness & Activity Dataset (Kaggle Link).
+> **Primary file:** `pycaret_assignment.ipynb` (complete, executable workflow)  
+> **Extras:** saved plots/outputs and two small Gradio apps for interactive demos.
 
-Assignment Deliverables
+---
 
-Colab Notebook: The primary file in this repository (pycaret_assignment.ipynb) contains the complete, executable code for all tasks.
+## Table of Contents
 
-Video Tutorial: A video walkthrough (to be recorded by the student) explaining the execution and output of each task.
+- [Dataset](#dataset)
+- [Quick Start (Colab)](#quick-start-colab)
+- [Environment Notes & Troubleshooting](#environment-notes--troubleshooting)
+- [Tasks Overview](#tasks-overview)
+  - [Task A — Supervised Learning](#task-a--supervised-learning)
+  - [Task B — Unsupervised Learning: Clustering](#task-b--unsupervised-learning-clustering)
+  - [Task C — Unsupervised Learning: Anomaly Detection](#task-c--unsupervised-learning-anomaly-detection)
+  - [Task D — Association Rules (Skipped)](#task-d--association-rules-skipped)
+  - [Task E — Time Series Forecasting](#task-e--time-series-forecasting)
+- [Gradio Demos](#gradio-demos)
+- [Repository Structure](#repository-structure)
+- [Reproducibility Tips](#reproducibility-tips)
+- [License](#license)
 
-GitHub Repository: This repository, organized with all code and saved outputs (plots).
+---
 
-Environment Setup & Troubleshooting
+## Dataset
 
-A significant part of this project was setting up a stable environment. The default Google Colab environment (Python 3.12) is incompatible with PyCaret 3.3.2.
+- **Source:** Fitness & Activity Dataset on Kaggle  
+- **Link:** _Add the Kaggle URL here_  
+- **Typical fields:** `steps`, `duration_min`, `heart_rate_avg`, `calories_burned`, `activity_type`, timestamps, and derived features.
 
-The notebook uses a multi-step setup process to resolve this:
+---
 
-STEP 1: Installs Python 3.11, sets it as the system default, and installs the pycaret[full]==3.3.2 library. A session restart is required after this step.
+## Quick Start (Colab)
 
-STEP 2: Validates the Python 3.11 environment.
+1. **Open the notebook**  
+   Upload or open `pycaret_assignment.ipynb` in Google Colab.
 
-Bug Fixes:
+2. **STEP 1 — Install Python 3.11 and PyCaret 3.3.2**  
+   Run the “STEP 1” cell in the notebook (installs Python 3.11 and `pycaret[full]==3.3.2`), then **restart the runtime**.
+   ```bash
+   # (Shown in the notebook)
+   !apt-get update -y
+   !apt-get install -y python3.11 python3.11-venv python3.11-dev
+   !update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+   !python3 -m pip install --upgrade pip
+   !python3 -m pip install "pycaret[full]==3.3.2" gradio
+   ```
 
-Imports PyCaret modules with aliases (e.g., import pycaret.classification as pc) to prevent setup() function name conflicts.
+3. **STEP 2 — Validate Environment**  
+   Confirm versions before running tasks:
+   ```python
+   import sys, pycaret
+   print(sys.version)
+   print(pycaret.__version__)
+   ```
 
-Sets log_experiment=False to avoid a critical AttributeError with Colab's built-in mlflow library.
+4. **Run the tasks (A–E)**  
+   Execute the notebook cells in order. Saved plots and artifacts are written to the repository folders as configured in the notebook.
 
-Wraps plot_model(plot='feature') in a try...except block to handle models that do not support feature importance.
+5. **Launch Gradio apps**  
+   The final section starts two small web apps for the regression and multiclass models.
 
-Corrects PyCaret 3.x argument names (e.g., moving contamination to create_model in Anomaly Detection and removing the exogenous_variables argument in Time Series).
+---
 
-Tasks Overview
+## Environment Notes & Troubleshooting
 
-Task A: Supervised Learning
+- **Colab default (Python 3.12) is incompatible** with `pycaret==3.3.2`. The notebook switches to **Python 3.11**.
+- **Session restart required** after STEP 1 so that Colab uses Python 3.11.
+- **Import aliases to avoid name conflicts:**  
+  `import pycaret.classification as pc`, `pycaret.regression as pr`, etc., to sidestep `setup()` collisions.
+- **Disable experiment logging in Colab:**  
+  Use `log_experiment=False` in `setup()` to avoid an `mlflow` `AttributeError`.
+- **Feature importance plotting:**  
+  Wrap `plot_model(model, plot='feature')` in `try/except` to handle models that don’t expose feature importance.
+- **PyCaret 3.x API changes:**  
+  - Anomaly Detection: `contamination` is passed to `create_model` (not `setup`).  
+  - Time Series: remove deprecated `exogenous_variables` argument; exogenous features are inferred from data passed to `setup()`.
 
-A-1: Binary Classification
+---
 
-Goal: Predict whether a workout session resulted in a "high calorie burn" (defined as > 300 calories).
+## Tasks Overview
 
-Target: high_calorie_burn (1 or 0)
+### Task A — Supervised Learning
 
-Model: tune_model(compare_models(optimize='AUC'))
+**Dataset target fields are engineered in-notebook.** Models are selected via `compare_models()` and then tuned with `tune_model()`.
 
-A-2: Multiclass Classification
+#### A-1: Binary Classification
+- **Goal:** Predict whether a session resulted in **high calorie burn** (> 300 calories).  
+- **Target:** `high_calorie_burn` (1/0)  
+- **Modeling:** `tune_model(compare_models(optimize='AUC'))`  
+- **Outputs:** Leaderboard, tuned model, confusion matrix, ROC, feature plots (when supported).
 
-Goal: Predict the activity_type (e.g., Cycling, Swimming, Yoga) based on workout metrics.
+#### A-2: Multiclass Classification
+- **Goal:** Predict `activity_type` (e.g., Cycling, Swimming, Yoga) from workout metrics.  
+- **Target:** `activity_type`  
+- **Modeling:** `tune_model(compare_models(optimize='Accuracy'))`  
+- **Outputs:** Leaderboard, tuned model, class report, confusion matrix.  
+- **Saved artifact:** Used by the **Multiclass Gradio App**.
 
-Target: activity_type
+#### A-3: Regression
+- **Goal:** Predict exact `calories_burned`.  
+- **Target:** `calories_burned` (numeric)  
+- **Modeling:** `tune_model(compare_models(optimize='MAE'))`  
+- **Outputs:** Leaderboard, tuned model, residuals, error plots.  
+- **Saved artifact:** Used by the **Regression Gradio App**.
 
-Model: tune_model(compare_models(optimize='Accuracy'))
+---
 
-A-3: Regression
+### Task B — Unsupervised Learning: Clustering
 
-Goal: Predict the exact number of calories_burned from a workout.
+- **Goal:** Discover user clusters from metrics like `steps`, `heart_rate_avg`, `duration_min`.  
+- **Algorithm:** **K-Means**, `num_clusters=4`  
+- **Plots:** Cluster plot (PCA), **Elbow plot** for K selection.
 
-Target: calories_burned (numeric)
+---
 
-Model: tune_model(compare_models(optimize='MAE'))
+### Task C — Unsupervised Learning: Anomaly Detection
 
-Task B: Unsupervised Learning - Clustering
+- **Goal:** Flag unusual workout sessions that deviate strongly from typical patterns.  
+- **Algorithm:** **Isolation Forest** (`iforest`)  
+- **Plots:** **UMAP** visualization of detected anomalies vs. normal sessions.
 
-Goal: Identify natural groupings (clusters) of users based on their fitness metrics (e.g., steps, heart_rate_avg, duration_min).
+---
 
-Algorithm: K-Means (num_clusters=4)
+### Task D — Association Rules (Skipped)
 
-Plots: Cluster Plot (PCA), Elbow Plot
+This task requires **PyCaret 2.3.5**, which depends on builds (e.g., `scipy`) incompatible with modern Colab + Python 3.11.  
+All other tasks run successfully with **PyCaret 3.3.2**.
 
-Task C: Unsupervised Learning - Anomaly Detection
+---
 
-Goal: Identify unusual or outlier workout sessions that deviate from the norm.
+### Task E — Time Series Forecasting
 
-Algorithm: Isolation Forest (iforest)
+#### E-1: Univariate Forecasting
+- **Goal:** Forecast next **7 days** of total `steps` using only historical steps.  
+- **Procedure:** PyCaret time series `setup()` → model selection → forecast and plots.
 
-Plots: UMAP Plot
+#### E-2: Univariate Forecasting with Exogenous Variables
+- **Goal:** Forecast next **7 days** of `steps` using `duration_min` as an external regressor.  
+- **Exogenous handling:** Provided to the time-series pipeline (inferred automatically by PyCaret 3.x).  
+- **Outputs:** Forecast table/plot, diagnostics.
 
-Task D: Association Rules Mining
+---
 
-NOTE: This task was skipped due to unresolvable environment conflicts. The required library (pycaret==2.3.5) has build dependencies (e.g., scipy) that are incompatible with the modern Google Colab environment and Python 3.11. All other tasks were completed successfully using pycaret 3.3.2.
+## Gradio Demos
 
-Task E: Time Series Forecasting
+Two simple apps (launched at the end of the notebook):
 
-E-1: Univariate Forecasting
+1. **Regression App** — predicts `calories_burned` from user inputs.  
+2. **Multiclass App** — predicts `activity_type`.
 
-Goal: Forecast the total number of steps for the next 7 days using only historical step data.
+Both load the tuned models saved in **Task A-2** and **Task A-3**. Instructions and launch code are included in the notebook cells.
 
-Target: steps
+---
 
-E-2: Univariate Forecasting with Exogenous Variables
+## Repository Structure
 
-Goal: Forecast the total number of steps for the next 7 days, using duration_min as an external factor to improve the prediction.
+```
+.
+├─ pycaret_assignment.ipynb        # Main Colab notebook (all tasks)
+├─ models/                         # Saved models/pipelines (created by notebook)
+├─ outputs/                        # Exported plots, figures, and artifacts
+└─ apps/                           # (Optional) Gradio helper scripts if saved
+```
 
-Target: steps
+> Note: Folders are created on demand by the notebook. Names may vary slightly depending on how you run/save artifacts.
 
-Exogenous Variable: duration_min (inferred automatically by PyCaret)
+---
 
-Gradio Web App Demos
+## Reproducibility Tips
 
-As required, the notebook concludes by launching two interactive web applications using gradio:
+- Use `session_id` (random seed) in `setup()` for deterministic splits when supported.
+- Keep `log_experiment=False` in Colab to avoid mlflow conflicts.
+- When rerunning, clear outputs and re-execute cells in order (after confirming Python 3.11 + PyCaret 3.3.2).
 
-Regression App: Predicts calories_burned based on user inputs.
+---
 
-Multiclass App: Predicts activity_type based on user inputs.
+## License
 
-These apps use the models saved in Task A-2 and A-3.
+_Add your preferred license here (e.g., MIT, Apache-2.0)._
+
+---
+
+### Deliverables Checklist
+
+- ✅ **Colab Notebook:** `pycaret_assignment.ipynb` with all tasks A–E (except D, skipped).  
+- ✅ **Video Tutorial:** Walkthrough explaining the execution and outputs.  
+- ✅ **GitHub Repository:** Organized with code and saved outputs (plots), plus this `README.md`.
+
+---
+
+**Acknowledgments:** Thanks to the PyCaret team and the Kaggle community for datasets and tooling.

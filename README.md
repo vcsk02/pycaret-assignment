@@ -18,7 +18,6 @@ This repository contains a Google Colab notebook that demonstrates end-to-end da
   - [Task C — Unsupervised Learning: Anomaly Detection](#task-c--unsupervised-learning-anomaly-detection)
   - [Task D — Association Rules (Skipped)](#task-d--association-rules-skipped)
   - [Task E — Time Series Forecasting](#task-e--time-series-forecasting)
-- [Gradio Demos](#gradio-demos)
 - [Repository Structure](#repository-structure)
 - [Reproducibility Tips](#reproducibility-tips)
 - [License](#license)
@@ -142,17 +141,6 @@ All other tasks run successfully with **PyCaret 3.3.2**.
 - **Goal:** Forecast next **7 days** of `steps` using `duration_min` as an external regressor.  
 - **Exogenous handling:** Provided to the time-series pipeline (inferred automatically by PyCaret 3.x).  
 - **Outputs:** Forecast table/plot, diagnostics.
-
----
-
-## Gradio Demos
-
-Two simple apps (launched at the end of the notebook):
-
-1. **Regression App** — predicts `calories_burned` from user inputs.  
-2. **Multiclass App** — predicts `activity_type`.
-
-Both load the tuned models saved in **Task A-2** and **Task A-3**. Instructions and launch code are included in the notebook cells.
 
 ---
 
